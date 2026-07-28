@@ -46,12 +46,48 @@
   .btn[disabled]{opacity:.5;cursor:default;}
   input[type=file]{display:none;}
 
-  /* 미리보기 */
-  .preview-wrap{
+  /* 사진 무대 (사진 + 결과 오버레이) */
+  .stage{
     position:relative;border-radius:16px;overflow:hidden;border:1px solid var(--line);
-    background:#000;display:none;aspect-ratio:1/1;
+    background:#000;display:none;
   }
-  .preview-wrap img{width:100%;height:100%;object-fit:cover;display:block;}
+  .stage img{
+    width:100%;height:auto;max-height:82vh;object-fit:contain;display:block;background:#000;
+  }
+  /* 왼쪽 아래 가독성을 위한 그라데이션 스크림 */
+  .stage::after{
+    content:"";position:absolute;left:0;right:0;bottom:0;height:60%;pointer-events:none;
+    background:linear-gradient(to top, rgba(0,0,0,0.55), rgba(0,0,0,0));
+    opacity:0;transition:opacity .3s;
+  }
+  .stage.has-result::after{opacity:1;}
+
+  /* 사진 위 결과 오버레이 (왼쪽 아래) */
+  .overlay{
+    position:absolute;left:10px;bottom:10px;z-index:2;
+    width:min(78%,300px);
+    background:rgba(20,18,16,0.52);
+    backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);
+    border:1px solid rgba(255,255,255,0.16);border-radius:12px;
+    padding:10px 12px;color:#fff;display:none;
+    box-shadow:0 6px 20px rgba(0,0,0,0.35);
+  }
+  .overlay h2{
+    font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;
+    color:rgba(255,255,255,0.65);margin:0 0 8px;font-weight:600;
+  }
+  .orow{margin-bottom:9px;}
+  .orow:last-child{margin-bottom:0;}
+  .oline{display:flex;align-items:baseline;gap:8px;}
+  .orank{font-size:11px;color:rgba(255,255,255,0.55);font-variant-numeric:tabular-nums;width:11px;flex:none;}
+  .oname{font-size:14px;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .opct{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;flex:none;}
+  .orow.top .oname, .orow.top .opct{color:#8fe0ad;}
+  .otax{font-size:10px;color:rgba(255,255,255,0.6);margin:1px 0 0 19px;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .obar{height:4px;background:rgba(255,255,255,0.18);border-radius:99px;overflow:hidden;margin:5px 0 0 19px;}
+  .obar > div{height:100%;width:0;background:#6fce93;border-radius:99px;transition:width .5s ease;}
+  .orow.top .obar > div{background:#8fe0ad;}
 
   /* 상태/진행 */
   .status{
@@ -65,23 +101,6 @@
   @keyframes spin{to{transform:rotate(360deg)}}
   .progress{height:6px;background:var(--bar-bg);border-radius:99px;overflow:hidden;margin:10px 2px;display:none;}
   .progress > div{height:100%;width:0;background:var(--accent);transition:width .2s;}
-
-  /* 결과 */
-  .results{margin-top:8px;display:none;}
-  .results h2{font-size:13px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);margin:0 2px 12px;}
-  .row{
-    background:var(--card);border:1px solid var(--line);border-radius:14px;
-    padding:14px 16px;margin-bottom:10px;
-  }
-  .row.top{border-color:var(--accent);background:var(--accent-soft);}
-  .row-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;}
-  .name{font-size:17px;font-weight:650;}
-  .row.top .name{color:var(--accent);}
-  .pct{font-variant-numeric:tabular-nums;font-weight:700;font-size:17px;flex:none;}
-  .tax{font-size:12.5px;color:var(--muted);margin-top:2px;}
-  .bar{height:8px;background:var(--bar-bg);border-radius:99px;overflow:hidden;margin-top:10px;}
-  .bar > div{height:100%;width:0;background:var(--accent);border-radius:99px;transition:width .5s ease;}
-  .rank{font-size:12px;color:var(--muted);font-variant-numeric:tabular-nums;margin-right:8px;}
 
   .note{font-size:12px;color:var(--muted);text-align:center;margin-top:22px;line-height:1.6;}
   .err{color:var(--warn);}
@@ -106,14 +125,13 @@
   <div class="progress" id="progress"><div id="progressBar"></div></div>
   <div class="status" id="status"></div>
 
-  <div class="preview-wrap" id="previewWrap">
+  <div class="stage" id="stage">
     <img id="preview" alt="선택한 사진" />
+    <section class="overlay" id="results">
+      <h2>추정 · 상위 5</h2>
+      <div id="rows"></div>
+    </section>
   </div>
-
-  <section class="results" id="results">
-    <h2>추정 결과 (상위 5)</h2>
-    <div id="rows"></div>
-  </section>
 
   <p class="note">
     결과는 학습된 목 후보 중에서의 상대 확률입니다.<br/>
@@ -144,7 +162,7 @@
   const progBar  = $("progressBar");
   const resultsEl = $("results");
   const rowsEl = $("rows");
-  const previewWrap = $("previewWrap");
+  const stageEl = $("stage");
   const previewImg = $("preview");
 
   let session = null;
@@ -269,50 +287,48 @@
       const name = orders[i];
       const info = tax[name] || {};
       const pct = (p * 100).toFixed(1);
+      const isTop = rank === 0;
 
       const row = document.createElement("div");
-      row.className = "row" + (rank === 0 ? " top" : "");
+      row.className = "orow" + (isTop ? " top" : "");
 
-      const head = document.createElement("div");
-      head.className = "row-head";
+      const line = document.createElement("div");
+      line.className = "oline";
+      line.innerHTML =
+        `<span class="orank">${rank+1}</span>` +
+        `<span class="oname"></span>` +
+        `<span class="opct">${pct}%</span>`;
+      line.querySelector(".oname").textContent = name;   // 이름 안전 삽입
+      row.appendChild(line);
 
-      const left = document.createElement("div");
-      const nameLine = document.createElement("div");
-      nameLine.className = "name";
-      nameLine.innerHTML = `<span class="rank">${rank+1}</span>${name}`;
-      left.appendChild(nameLine);
-      if (info.phylum || info.class) {
+      // 1위에만 문/강 표기 (공간 절약)
+      if (isTop && (info.phylum || info.class)) {
         const t = document.createElement("div");
-        t.className = "tax";
+        t.className = "otax";
         t.textContent = [info.phylum, info.class].filter(Boolean).join(" · ");
-        left.appendChild(t);
+        row.appendChild(t);
       }
 
-      const pctEl = document.createElement("div");
-      pctEl.className = "pct";
-      pctEl.textContent = pct + "%";
-
-      head.appendChild(left);
-      head.appendChild(pctEl);
-      row.appendChild(head);
-
       const bar = document.createElement("div");
-      bar.className = "bar";
+      bar.className = "obar";
       const fill = document.createElement("div");
       bar.appendChild(fill);
       row.appendChild(bar);
 
       rowsEl.appendChild(row);
-      requestAnimationFrame(() => { fill.style.width = Math.max(2, p*100) + "%"; });
+      requestAnimationFrame(() => { fill.style.width = Math.max(3, p*100) + "%"; });
     });
 
     resultsEl.style.display = "block";
+    stageEl.classList.add("has-result");
   }
 
   // ====== 추론 실행 ======
   async function runInference(imgEl) {
     if (!session) { setStatus("모델이 아직 준비되지 않았습니다.", {err:true}); return; }
     try {
+      resultsEl.style.display = "none";        // 이전 결과 숨기기
+      stageEl.classList.remove("has-result");
       setStatus("분류하는 중…", {spin:true});
       const input = preprocess(imgEl);
       const feeds = {};
@@ -333,7 +349,7 @@
     if (!file) return;
     const url = URL.createObjectURL(file);
     previewImg.onload = () => {
-      previewWrap.style.display = "block";
+      stageEl.style.display = "block";
       runInference(previewImg);
     };
     previewImg.src = url;
