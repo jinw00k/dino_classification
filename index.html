@@ -64,28 +64,28 @@
 
   /* 사진 위 결과 오버레이 (왼쪽 아래) */
   .overlay{
-    position:absolute;left:10px;bottom:10px;z-index:2;
-    width:min(78%,300px);
+    position:absolute;left:6px;bottom:6px;z-index:2;
+    width:min(46%,150px);
     background:rgba(20,18,16,0.52);
     backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);
-    border:1px solid rgba(255,255,255,0.16);border-radius:12px;
-    padding:10px 12px;color:#fff;display:none;
-    box-shadow:0 6px 20px rgba(0,0,0,0.35);
+    border:1px solid rgba(255,255,255,0.16);border-radius:8px;
+    padding:6px 7px;color:#fff;display:none;
+    box-shadow:0 4px 12px rgba(0,0,0,0.35);
   }
   .overlay h2{
-    font-size:9.5px;letter-spacing:.16em;text-transform:uppercase;
-    color:rgba(255,255,255,0.65);margin:0 0 8px;font-weight:600;
+    font-size:7px;letter-spacing:.12em;text-transform:uppercase;
+    color:rgba(255,255,255,0.6);margin:0 0 5px;font-weight:600;
   }
-  .orow{margin-bottom:9px;}
+  .orow{margin-bottom:5px;}
   .orow:last-child{margin-bottom:0;}
-  .oline{display:flex;align-items:baseline;gap:8px;}
-  .orank{font-size:11px;color:rgba(255,255,255,0.55);font-variant-numeric:tabular-nums;width:11px;flex:none;}
-  .oname{font-size:14px;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .opct{font-size:13px;font-weight:700;font-variant-numeric:tabular-nums;flex:none;}
+  .oline{display:flex;align-items:baseline;gap:4px;}
+  .orank{font-size:8px;color:rgba(255,255,255,0.55);font-variant-numeric:tabular-nums;width:7px;flex:none;}
+  .oname{font-size:9.5px;font-weight:600;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  .opct{font-size:9px;font-weight:700;font-variant-numeric:tabular-nums;flex:none;}
   .orow.top .oname, .orow.top .opct{color:#8fe0ad;}
-  .otax{font-size:10px;color:rgba(255,255,255,0.6);margin:1px 0 0 19px;
+  .otax{font-size:7px;color:rgba(255,255,255,0.6);margin:1px 0 0 11px;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-  .obar{height:4px;background:rgba(255,255,255,0.18);border-radius:99px;overflow:hidden;margin:5px 0 0 19px;}
+  .obar{height:2.5px;background:rgba(255,255,255,0.18);border-radius:99px;overflow:hidden;margin:3px 0 0 11px;}
   .obar > div{height:100%;width:0;background:#6fce93;border-radius:99px;transition:width .5s ease;}
   .orow.top .obar > div{background:#8fe0ad;}
 
