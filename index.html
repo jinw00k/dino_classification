@@ -148,10 +148,34 @@
   // ↓↓↓ 여기에 Hugging Face 에 올린 fp32 모델 주소를 붙여넣으세요 ↓↓↓
   //     형태: https://huggingface.co/본인계정/레포/resolve/main/order_classifier.onnx
   //     (int8 은 정확도가 무너져서 사용하지 않음. fp32 를 씁니다.)
-  const MODEL_URL  = "https://huggingface.co/unistunist/nnibr/resolve/main/order_classifier.onnx";
+  const MODEL_URL  = "https://huggingface.co/본인계정명/dino-order/resolve/main/order_classifier.onnx";
   const LABELS_URL = "./labels.json";
   const ORT_VERSION = "1.22.0";
   const TOPK = 5;
+
+  // 목(Order) 영어 -> 한글 이름 (없는 목은 영어 그대로 표시)
+  const ORDER_KO = {
+    "Cypriniformes": "잉어목",
+    "Perciformes": "농어목",
+    "Coleoptera": "딱정벌레목",
+    "Amphipoda": "단각목",
+    "Decapoda": "십각목",
+    "Isopoda": "등각목",
+    "Polypodiales": "고사리목",
+    "Najadales": "나자스말목",
+    "Scrophulariales": "꿀풀목",
+    "Liliales": "백합목",
+    "Odonata": "잠자리목",
+    "Tricladida": "삼기장목",
+    "Araneae": "거미목",
+    "Cyperales": "사초목",
+    "Hemiptera": "노린재목",
+    "Lepidoptera": "나비목",
+    "Hymenoptera": "벌목",
+    "Arcellinida": "유각변형충목",
+    "Naviculales": "쪽배돌말목",
+    "Cymbellales": "반달돌말목",
+  };
 
   ort.env.wasm.wasmPaths = `https://cdn.jsdelivr.net/npm/onnxruntime-web@${ORT_VERSION}/dist/`;
   ort.env.wasm.numThreads = 1; // GitHub Pages는 cross-origin isolation 불가 → 단일 스레드
@@ -299,7 +323,7 @@
         `<span class="orank">${rank+1}</span>` +
         `<span class="oname"></span>` +
         `<span class="opct">${pct}%</span>`;
-      line.querySelector(".oname").textContent = name;   // 이름 안전 삽입
+      line.querySelector(".oname").textContent = ORDER_KO[name] || name;  // 한글 이름(없으면 영어)
       row.appendChild(line);
 
       // 1위에만 문/강 표기 (공간 절약)
